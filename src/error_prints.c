@@ -4,7 +4,9 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* See feature_test_macros(7) */
+#endif
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>

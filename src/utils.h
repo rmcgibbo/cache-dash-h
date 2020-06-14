@@ -1,7 +1,7 @@
 #pragma once
-#include <cstdint>
 #include <functional>
 #include <limits.h>
+#include <stdint.h>
 #include <string>
 #include <vector>
 
