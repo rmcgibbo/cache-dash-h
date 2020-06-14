@@ -7,17 +7,15 @@ _cache the help text for your dog-slow python scripts_
 `cache-dash-h` is a wrapper command that you can use to make CLIs that are slow to startup
 more pleasant to use interactively, if you execute `-h/--help` frequently.
 
-When your run `$ cache-dash-h python my-slow-script.py --help`, it runs yours command
-(`$ python my-slow-script.py --help`) but caches the stdout so that subsequent calls can be fast.
-
-And of course you don't call the script with -h or --help, it'll just exec your script and you
-won't even realize it was there.
+When you wrap `cache-dash-h`, around a command, it runs your command and caches the stdout
+so that subsequent calls can be fast. And of course you don't call the script with `-h` or
+`--help`, it'll just exec your script and you won't even realize it was there.
 
 But what if you change the script, or edit one of the files that the script loads during its startup?
 Well, `cache-dash-h` tries pretty hard not to serve stale results. If you change the script or any of
 the libraries the script loads, it'll notice and rerun your slow script (or at least it _should_ notice).
-It does this by running your command under strace, and recording all of the files that your command opened
-and their hashes. If any of those files have changed, then it assumes its cached help text is invalid.
+It does this by recording the hash of every file file your program opens, in addition to the help text.
+If any of those files have changed, then it assumes its cached help text is invalid.
 
 ## Usage
 
