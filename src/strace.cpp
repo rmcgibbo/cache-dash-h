@@ -12,6 +12,17 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utility>
+#include <elf.h>
+
+
+#if defined(__x86_64__) || defined(_M_X64)
+#define X64 1
+#elif defined(__arm64__) || defined(__aarch64__)
+#define A64 1
+#else
+#error "Unknown architecture"
+#endif
+
 
 namespace cache_dash_h {
 
@@ -76,11 +87,19 @@ int umovestr(const pid_t pid, kernel_ulong_t addr, unsigned int len, char* laddr
 }
 
 struct syscall_args_t {
+    #if X64
     syscall_args_t(pid_t pid, const user_regs_struct& regs)
         : pid{pid}
         , num{regs.orig_rax}
         , args{regs.rdi, regs.rsi, regs.rdx}
         , returnval{regs.rax} {}
+    #elif A64
+    syscall_args_t(pid_t pid, const user_regs_struct& regs)
+        : pid{pid}
+        , num{regs.regs[8]}
+        , args{regs.regs[0], regs.regs[1], regs.regs[2]}
+        , returnval{regs.regs[0]} {}
+    #endif
 
     const int pid;
     const unsigned long long num;
@@ -136,6 +155,7 @@ void process_open(syscall_args_t& call, std::vector<syscall_record> records) {
 
 int trace_child(pid_t pid, int* exit_status, std::vector<syscall_record>& records) {
     int status;
+    struct iovec iov;
     struct user_regs_struct regs;
     bool start = true;
 
@@ -146,11 +166,14 @@ int trace_child(pid_t pid, int* exit_status, std::vector<syscall_record>& record
             return -1;
         }
 
-        /* 64bit only */
-        ptrace(PTRACE_GETREGS, pid, 0, &regs);
+        iov.iov_base = &regs;
+        iov.iov_len = sizeof(regs);
+        if (ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, &iov) == -1) {
+            error_msg_and_die("ptrace failed to get registers");
+        }
         syscall_args_t syscall(pid, regs);
 
-        switch (regs.orig_rax) {
+        switch (syscall.num) {
         case SYS_chdir:
             if ((start = !start) == true)
                 process_chdir(syscall, records);
@@ -159,13 +182,17 @@ int trace_child(pid_t pid, int* exit_status, std::vector<syscall_record>& record
             if ((start = !start) == true)
                 process_openat(syscall, records);
             break;
+#if defined(SYS_open)
         case SYS_open:
             if ((start = !start) == true)
                 process_open(syscall, records);
             break;
+#endif
         }
 
-        ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+        if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL) < 0) {
+            perror_msg_and_die("Can't trace\n");
+        }
     }
 }
 
@@ -213,7 +240,7 @@ exec_and_record_opened_files(std::vector<std::string>& cmd,
                     curdir = path::realpath(curdir + "/" + syscall_path);
                 }
             } else {
-                assert(syscall_num == SYS_open || syscall_num == SYS_openat);
+                // assert(syscall_num == SYS_open || syscall_num == SYS_openat);
                 if (path::isabs(syscall_path)) {
                     open_callback(syscall_path);
                 } else {
