@@ -1,0 +1,3 @@
+find_program(BASH_PROGRAM bash)
+add_test(NAME test-1 COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/test-1.sh)
+set_property(TEST test-1 PROPERTY ENVIRONMENT PATH=${CMAKE_BINARY_DIR}:$ENV{PATH})

@@ -1,0 +1,10 @@
+Language: Cpp
+BasedOnStyle: LLVM
+AlignConsecutiveAssignments: false
+BinPackParameters : false
+ColumnLimit: 100
+IndentWidth: 4
+SortIncludes: true
+BreakConstructorInitializersBeforeComma: true
+DerivePointerAlignment: false
+PointerAlignment: Left
