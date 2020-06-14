@@ -127,7 +127,7 @@ void process_open(syscall_args_t& call, std::vector<syscall_record> records) {
     }
 
     char path[PATH_MAX];
-    int num_bytes = umovestr(call.pid, call.args[1], sizeof(path), path);
+    int num_bytes = umovestr(call.pid, call.args[0], sizeof(path), path);
     if (num_bytes <= 0)
         error_msg_and_die("failed to read memory");
     records.push_back({call.num, std::string(path)});

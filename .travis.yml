@@ -7,10 +7,10 @@ jobs:
       compiler: clang
     - dist: bionic
       compiler: gcc
-    # - dist: xenial
-    #   compiler: clang
-    # - dist: xenial
-    #   compiler: gcc
+    - dist: xenial
+      compiler: clang
+    - dist: xenial
+      compiler: gcc
 
 script:
   - mkdir build && cd build && cmake ..
