@@ -1,10 +1,17 @@
-dist: bionic
 language: cpp
+os: linux
+
+jobs:
+  include:
+    - dist: trusty
+    - dist: xenial
+    - dist: trusty
+    - dist: precise
+
 compiler:
   - clang
   - gcc
-os:
-  - linux
+
 script:
   - mkdir build && cd build && cmake ..
   - make
