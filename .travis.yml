@@ -15,7 +15,10 @@ jobs:
       compiler: clang
     - dist: trusty
       compiler: gcc
-      
+    - arch: arm64
+      compiler: gcc
+      dist: bionic
+
 script:
   - mkdir build && cd build && cmake ..
   - make
