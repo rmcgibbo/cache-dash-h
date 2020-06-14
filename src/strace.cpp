@@ -89,25 +89,31 @@ struct syscall_args_t {
     syscall_args_t(pid_t pid, const user_regs_struct& regs)
         : pid{pid}
         , num{regs.orig_rax}
-        , args{regs.rdi, regs.rsi, regs.rdx}
+        , p0{regs.rdi}
+        , p1{regs.rsi}
+        , p2{regs.rdx}
         , returnval{regs.rax} {}
 #elif A64
     syscall_args_t(pid_t pid, const user_regs_struct& regs)
         : pid{pid}
         , num{regs.regs[8]}
-        , args{regs.regs[0], regs.regs[1], regs.regs[2]}
+        , p0{regs.regs[0]}
+        , p1{regs.regs[1]}
+        , p2{regs.regs[2]}
         , returnval{regs.regs[0]} {}
 #endif
 
     const int pid;
     const unsigned long long num;
-    const unsigned long long args[3];
+    const unsigned long long p0;
+    const unsigned long long p1;
+    const unsigned long long p2;
     const unsigned long long returnval;
 };
 
 void process_chdir(syscall_args_t& call, std::vector<syscall_record>& records) {
     char path[PATH_MAX];
-    int num_bytes = umovestr(call.pid, call.args[0], sizeof(path), path);
+    int num_bytes = umovestr(call.pid, call.p0, sizeof(path), path);
     if (num_bytes <= 0)
         error_msg_and_die("failed to read memory");
     records.push_back({call.num, std::string(path)});
@@ -115,12 +121,12 @@ void process_chdir(syscall_args_t& call, std::vector<syscall_record>& records) {
 }
 
 void process_openat(syscall_args_t& call, std::vector<syscall_record>& records) {
-    if (call.args[2] & O_DIRECTORY) {
+    if (call.p2 & O_DIRECTORY) {
         // if openat was passed with O_DIRECTORY
         // then it's not opening a file
         return;
     }
-    if (call.args[2] & O_WRONLY) {
+    if (call.p2 & O_WRONLY) {
         return;
     }
     if ((-call.returnval) & ENOENT) {
@@ -128,7 +134,7 @@ void process_openat(syscall_args_t& call, std::vector<syscall_record>& records) 
     }
 
     char path[PATH_MAX];
-    int num_bytes = umovestr(call.pid, call.args[1], sizeof(path), path);
+    int num_bytes = umovestr(call.pid, call.p1, sizeof(path), path);
     if (num_bytes <= 0)
         error_msg_and_die("failed to read memory");
     records.push_back({call.num, std::string(path)});
@@ -136,7 +142,7 @@ void process_openat(syscall_args_t& call, std::vector<syscall_record>& records) 
 }
 
 void process_open(syscall_args_t& call, std::vector<syscall_record> records) {
-    if (call.args[1] & O_WRONLY) {
+    if (call.p1 & O_WRONLY) {
         return;
     }
     if (-call.returnval & ENOENT) {
@@ -144,7 +150,7 @@ void process_open(syscall_args_t& call, std::vector<syscall_record> records) {
     }
 
     char path[PATH_MAX];
-    int num_bytes = umovestr(call.pid, call.args[0], sizeof(path), path);
+    int num_bytes = umovestr(call.pid, call.p0, sizeof(path), path);
     if (num_bytes <= 0)
         error_msg_and_die("failed to read memory");
     records.push_back({call.num, std::string(path)});
