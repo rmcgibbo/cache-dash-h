@@ -11,7 +11,11 @@ jobs:
       compiler: clang
     - dist: xenial
       compiler: gcc
-
+    - dist: trusty
+      compiler: clang
+    - dist: trusty
+      compiler: gcc
+      
 script:
   - mkdir build && cd build && cmake ..
   - make
