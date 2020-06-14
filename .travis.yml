@@ -4,11 +4,13 @@ os: linux
 jobs:
   include:
     - dist: bionic
-    - dist: xenial
-
-compiler:
-  - clang
-  - gcc
+      compiler: clang
+    - dist: bionic
+      compiler: gcc
+    # - dist: xenial
+    #   compiler: clang
+    # - dist: xenial
+    #   compiler: gcc
 
 script:
   - mkdir build && cd build && cmake ..
