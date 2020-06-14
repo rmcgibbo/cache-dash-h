@@ -1,3 +1,4 @@
+dist: bionic
 language: cpp
 compiler:
   - clang
@@ -7,4 +8,4 @@ os:
 script:
   - mkdir build && cd build && cmake ..
   - make
-  - ctest
+  - ctest -V
