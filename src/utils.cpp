@@ -176,7 +176,7 @@ std::string hash_filename(const std::string& fn) {
 std::string find_in_path(const std::string& filename_) {
     struct stat statbuf;
     const char* filename = filename_.c_str();
-    char pathname[PATH_MAX+1];
+    char pathname[PATH_MAX + 1];
 
     size_t filename_len = strlen(filename);
 
@@ -211,7 +211,7 @@ std::string find_in_path(const std::string& filename_) {
                 pathname[len++] = '/';
             if (filename_len + len > sizeof(pathname) - 1)
                 continue;
-            strncpy(pathname + len, filename, PATH_MAX-len);
+            strncpy(pathname + len, filename, PATH_MAX - len);
             if (stat(pathname, &statbuf) == 0 &&
                 /* Accept only regular files
                    with some execute bits set.

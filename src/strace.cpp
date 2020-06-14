@@ -3,6 +3,7 @@
 #include "error_prints.h"
 #include "utils.h"
 
+#include <elf.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ptrace.h>
@@ -12,8 +13,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utility>
-#include <elf.h>
-
 
 #if defined(__x86_64__) || defined(_M_X64)
 #define X64 1
@@ -22,7 +21,6 @@
 #else
 #error "Unknown architecture"
 #endif
-
 
 namespace cache_dash_h {
 
@@ -87,19 +85,19 @@ int umovestr(const pid_t pid, kernel_ulong_t addr, unsigned int len, char* laddr
 }
 
 struct syscall_args_t {
-    #if X64
+#if X64
     syscall_args_t(pid_t pid, const user_regs_struct& regs)
         : pid{pid}
         , num{regs.orig_rax}
         , args{regs.rdi, regs.rsi, regs.rdx}
         , returnval{regs.rax} {}
-    #elif A64
+#elif A64
     syscall_args_t(pid_t pid, const user_regs_struct& regs)
         : pid{pid}
         , num{regs.regs[8]}
         , args{regs.regs[0], regs.regs[1], regs.regs[2]}
         , returnval{regs.regs[0]} {}
-    #endif
+#endif
 
     const int pid;
     const unsigned long long num;
