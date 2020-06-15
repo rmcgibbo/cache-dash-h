@@ -7,7 +7,7 @@ _cache the help text for your dog-slow python scripts_
 `cache-dash-h` is a wrapper command that you can use to make CLIs that are slow to startup
 more pleasant to use interactively, if you execute `-h/--help` frequently.
 
-When you wrap `cache-dash-h`, around a command, it runs your command and caches the stdout
+When you wrap `cache-dash-h` around a command, it runs your command and caches the stdout
 so that subsequent calls can be fast. And of course you don't call the script with `-h` or
 `--help`, it'll just exec your script and you won't even realize it was there.
 
