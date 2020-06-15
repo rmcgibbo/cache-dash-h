@@ -140,38 +140,47 @@ std::string hash_command_line(int length, const std::vector<std::string>& cmd) {
 }
 
 std::string hash_filename(const std::string& fn, bool allow_ENOENT) {
-    // Get the size of the file by its file descriptor
-    auto get_size_by_fd = [&](int fd) {
-        struct stat statbuf;
-        if (fstat(fd, &statbuf) < 0) {
-            perror_msg_and_die("Can't stat: '%s'", fn.c_str());
-        }
-        return statbuf.st_size;
-    };
-    auto file_descript = open(fn.c_str(), O_RDONLY);
-    if (file_descript < 0) {
-        if (allow_ENOENT && errno == ENOENT) {
-            return "";
-        }
-        perror_msg_and_die("Can't open: '%s'", fn.c_str());
-    }
-    auto file_size = get_size_by_fd(file_descript);
-
     SpookyHash spooky;
     spooky.Init(0, 0);
+    spooky.Update(fn.c_str(), fn.size());
+
+    auto fd = open(fn.c_str(), O_RDONLY);
+    if (fd < 0) {
+        if (allow_ENOENT && errno == ENOENT)
+            return hexdigest(spooky);
+        if (errno == EPERM || errno == EACCES)
+            return hexdigest(spooky);
+        perror_msg_and_die("Can't open: '%s'", fn.c_str());
+    }
+
+    struct stat statbuf;
+    if (fstat(fd, &statbuf) < 0)
+        perror_msg_and_die("Can't stat: '%s'", fn.c_str());
+    if (!S_ISREG(statbuf.st_mode)) {
+        if (close(fd) < 0) {
+            perror_msg_and_die("Can't close: '%s'", fn.c_str());
+        }
+        fprintf(stderr, "%s WARNING: not regular file: %s\n", program_invocation_short_name, fn.c_str());
+        return hexdigest(spooky);
+    }
+    auto file_size = statbuf.st_size;
+
 
     if (file_size > 0) {
-        auto file_buffer = mmap(0, file_size, PROT_READ, MAP_SHARED, file_descript, 0);
-        spooky.Update(file_buffer, file_size);
-
-        if (munmap(file_buffer, file_size) < 0) {
-            perror_msg_and_die("Can't unmap: '%s'", fn.c_str());
+        auto file_buffer = mmap(0, file_size, PROT_READ, MAP_SHARED, fd, 0);
+        if (file_buffer == MAP_FAILED) {
+            fprintf(stderr, "%s WARNING mmap failed: %s\n", program_invocation_short_name, fn.c_str());
+            if (close(fd) < 0)
+                perror_msg_and_die("Can't close: '%s'", fn.c_str());
+            return hexdigest(spooky);
         }
+        spooky.Update(file_buffer, file_size);
+        if (munmap(file_buffer, file_size) < 0)
+            perror_msg_and_die("Can't unmap: '%s'", fn.c_str());
     }
 
-    if (close(file_descript) < 0) {
+    if (close(fd) < 0)
         perror_msg_and_die("Can't close: '%s'", fn.c_str());
-    }
 
     return hexdigest(spooky);
 }

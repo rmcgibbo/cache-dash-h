@@ -1,5 +1,6 @@
 set -e -x
 
+CMD="catchsegv cache-dash-h"
 function setup {
     export CACHEDASHH_STABLEPATH="/dev:/sys"
     export CACHEDASHH_DB=local.db
@@ -9,45 +10,45 @@ function setup {
 # check that help text is generated
 function test1 {
     setup
-    cache-dash-h | grep "usage: cache-dash-h"
-    cache-dash-h -h  | grep "usage: cache-dash-h"
+    $CMD | grep "usage: cache-dash-h"
+    $CMD -h  | grep "usage: cache-dash-h"
 }
 
 # running a simple command unchanged with no -h
 function test2 {
     setup
-    cache-dash-h bash -c "echo hello world" | grep "hello world"
+    $CMD bash -c "echo hello world" | grep "hello world"
 }
 
 # caching with --help is given
 function test3 {
     setup
-    cache-dash-h -v bash --help
+    $CMD -v bash --help
 
     setup
-    cache-dash-h -v bash --help | grep "cache-dash-h: Saved to cache 'local.db'"
-    cache-dash-h -v bash --help | grep "cache-dash-h: Read from cache 'local.db'"
+    $CMD -v bash --help | grep "cache-dash-h: Saved to cache 'local.db'"
+    $CMD -v bash --help | grep "cache-dash-h: Read from cache 'local.db'"
 }
 
 # caching only based on command name (bash) when -n 1 is given
 function test4 {
     setup
-    cache-dash-h -v -n 1 bash --help abc | grep "cache-dash-h: Saved to cache 'local.db'"
-    cache-dash-h -v -n 1 bash --help 123 | grep "cache-dash-h: Read from cache 'local.db'"
+    $CMD -v -n 1 bash --help abc | grep "cache-dash-h: Saved to cache 'local.db'"
+    $CMD -v -n 1 bash --help 123 | grep "cache-dash-h: Read from cache 'local.db'"
 }
 
 # caching based on entire command when -n is not given
 function test5 {
     setup
-    cache-dash-h -v bash --help abc | grep "cache-dash-h: Saved to cache 'local.db'"
-    cache-dash-h -v bash --help 123 | grep "cache-dash-h: Saved to cache 'local.db'"
-    cache-dash-h -v bash def --help | grep "cache-dash-h: Saved to cache 'local.db'"
-    cache-dash-h -v bash 456 --help | grep "cache-dash-h: Saved to cache 'local.db'"
+    $CMD -v bash --help abc | grep "cache-dash-h: Saved to cache 'local.db'"
+    $CMD -v bash --help 123 | grep "cache-dash-h: Saved to cache 'local.db'"
+    $CMD -v bash def --help | grep "cache-dash-h: Saved to cache 'local.db'"
+    $CMD -v bash 456 --help | grep "cache-dash-h: Saved to cache 'local.db'"
 
-    cache-dash-h -v bash --help abc | grep "cache-dash-h: Read from cache 'local.db'"
-    cache-dash-h -v bash --help 123 | grep "cache-dash-h: Read from cache 'local.db'"
-    cache-dash-h -v bash def --help | grep "cache-dash-h: Read from cache 'local.db'"
-    cache-dash-h -v bash 456 --help | grep "cache-dash-h: Read from cache 'local.db'"
+    $CMD -v bash --help abc | grep "cache-dash-h: Read from cache 'local.db'"
+    $CMD -v bash --help 123 | grep "cache-dash-h: Read from cache 'local.db'"
+    $CMD -v bash def --help | grep "cache-dash-h: Read from cache 'local.db'"
+    $CMD -v bash 456 --help | grep "cache-dash-h: Read from cache 'local.db'"
 }
 
 function test6 {
@@ -58,9 +59,9 @@ function test6 {
     echo "head -c 65536 < /dev/zero | tr '\0' '\141'" > /tmp/script2.sh
     echo "head -c 131072 < /dev/zero | tr '\0' '\141'" > /tmp/script3.sh
 
-    cache-dash-h -v bash /tmp/script1.sh -h > /dev/null
-    cache-dash-h -v bash /tmp/script2.sh -h > /dev/null
-    cache-dash-h -v bash /tmp/script3.sh -h > /dev/null
+    $CMD -v bash /tmp/script1.sh -h > /dev/null
+    $CMD -v bash /tmp/script2.sh -h > /dev/null
+    $CMD -v bash /tmp/script3.sh -h > /dev/null
 }
 
 # exit status gets forwarded
@@ -69,14 +70,14 @@ function test7 {
 
     # when command contains -h
     set +e
-    cache-dash-h bash /sdfsdf/sdsdfsdfs/doesnt-exist -h
+    $CMD bash /sdfsdf/sdsdfsdfs/doesnt-exist -h
     result=$?
     set -e
     [ "$result" == 127 ]
 
     # and when command does not contain -h
     set +e
-    cache-dash-h bash /sdfsdf/sdsdfsdfs/doesnt-exist
+    $CMD bash /sdfsdf/sdsdfsdfs/doesnt-exist
     result=$?
     set -e
     [ "$result" == 127 ]
@@ -88,20 +89,20 @@ function test8
     setup
     touch $CACHEDASHH_DB
     chmod -w $CACHEDASHH_DB
-    cache-dash-h -v bash --help
+    $CMD -v bash --help
 
     setup
-    cache-dash-h -v bash --help
+    $CMD -v bash --help
     chmod -w $CACHEDASHH_DB
-    cache-dash-h -v bash --help | grep "cache-dash-h: Read from cache 'local.db'"
+    $CMD -v bash --help | grep "cache-dash-h: Read from cache 'local.db'"
 }
 
 # test -p cmdline
 function test9 {
     setup
     rm -f /tmp/abc123.db
-    cache-dash-h -v -p /tmp/abc123.db bash script1 abc -h || true
-    cache-dash-h -v -p /tmp/abc123.db bash script2 abc -h || true
+    $CMD -v -p /tmp/abc123.db bash script1 abc -h || true
+    $CMD -v -p /tmp/abc123.db bash script2 abc -h || true
     sqlite3 -header /tmp/abc123.db 'select * from cmdline'
 }
 
@@ -110,7 +111,7 @@ function test10 {
     setup
     tmpdir=$(mktemp -d)
     touch $tmpdir/script.sh
-    cache-dash-h -v -p '$ORIGIN1/file.db' bash $tmpdir/script.sh --help
+    $CMD -v -p '$ORIGIN1/file.db' bash $tmpdir/script.sh --help
     sqlite3 -header $tmpdir/file.db 'select * from cmdline'
     rm -rf $tmpdir
 }
@@ -122,11 +123,11 @@ function test11 {
     touch $tmpdir/foo
     pushd $tmpdir
     which python
-    cache-dash-h -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help
-    cache-dash-h -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help | grep "Read from cache"
+    $CMD -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help
+    $CMD -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help | grep "Read from cache"
     rm -f $tmpdir/foo
     # now that file doesn't exist, it's the same as having changed the dep
-    cache-dash-h -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help grep "Saved to cache"
+    $CMD -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help grep "Saved to cache"
     popd
     rm -rf $tmpdir
 }
