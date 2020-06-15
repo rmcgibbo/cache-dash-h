@@ -160,7 +160,7 @@ std::string hash_filename(const std::string& fn, bool allow_ENOENT) {
         if (close(fd) < 0) {
             perror_msg_and_die("Can't close: '%s'", fn.c_str());
         }
-        fprintf(stderr, "%s WARNING: not regular file: %s\n", program_invocation_short_name, fn.c_str());
+        // fprintf(stderr, "%s: WARNING: not regular file: %s\n", program_invocation_short_name, fn.c_str());
         return hexdigest(spooky);
     }
     auto file_size = statbuf.st_size;
@@ -169,7 +169,7 @@ std::string hash_filename(const std::string& fn, bool allow_ENOENT) {
     if (file_size > 0) {
         auto file_buffer = mmap(0, file_size, PROT_READ, MAP_SHARED, fd, 0);
         if (file_buffer == MAP_FAILED) {
-            fprintf(stderr, "%s WARNING mmap failed: %s\n", program_invocation_short_name, fn.c_str());
+            fprintf(stderr, "%s: WARNING mmap failed: %s\n", program_invocation_short_name, fn.c_str());
             if (close(fd) < 0)
                 perror_msg_and_die("Can't close: '%s'", fn.c_str());
             return hexdigest(spooky);
