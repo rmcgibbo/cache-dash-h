@@ -141,7 +141,7 @@ void process_openat(syscall_args_t& call, std::vector<syscall_record>& records) 
     return;
 }
 
-void process_open(syscall_args_t& call, std::vector<syscall_record> records) {
+void process_open(syscall_args_t& call, std::vector<syscall_record>& records) {
     if (call.p1 & O_WRONLY) {
         return;
     }
