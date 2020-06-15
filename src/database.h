@@ -109,7 +109,7 @@ struct Database {
             bool match = true;
             size_t i;
             for (i = 0; i < paths.size(); i++) {
-                if (hash_filename(paths[i]) != hashes[i]) {
+                if (hash_filename(paths[i], /* allow_ENOENT=*/true) != hashes[i]) {
                     // printf("nomatch %s (got=%s) exp=%s\n", paths[i].c_str(),
                     // hash_filename(paths[i]).c_str(),
                     //       hashes[i].c_str());
@@ -160,7 +160,7 @@ struct Database {
         auto cmdline_id = db_.getLastInsertRowid();
 
         for (auto const& path : depfiles) {
-            auto hash = hash_filename(path);
+            auto hash = hash_filename(path, /*allow_ENOENT=*/false);
             SQLite::Statement insert2(db_, R"EOF(
                 INSERT OR IGNORE INTO file (id, path, hash)
                 VALUES (NULL, ?, ?);

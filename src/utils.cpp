@@ -139,7 +139,7 @@ std::string hash_command_line(int length, const std::vector<std::string>& cmd) {
     return hexdigest(spooky);
 }
 
-std::string hash_filename(const std::string& fn) {
+std::string hash_filename(const std::string& fn, bool allow_ENOENT) {
     // Get the size of the file by its file descriptor
     auto get_size_by_fd = [&](int fd) {
         struct stat statbuf;
@@ -150,6 +150,9 @@ std::string hash_filename(const std::string& fn) {
     };
     auto file_descript = open(fn.c_str(), O_RDONLY);
     if (file_descript < 0) {
+        if (allow_ENOENT && errno == ENOENT) {
+            return "";
+        }
         perror_msg_and_die("Can't open: '%s'", fn.c_str());
     }
     auto file_size = get_size_by_fd(file_descript);

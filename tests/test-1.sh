@@ -1,23 +1,29 @@
 set -e -x
 
 function setup {
+    export CACHEDASHH_STABLEPATH="/dev:/sys"
     export CACHEDASHH_DB=local.db
     rm -f $CACHEDASHH_DB
 }
 
 # check that help text is generated
 function test1 {
+    setup
     cache-dash-h | grep "usage: cache-dash-h"
     cache-dash-h -h  | grep "usage: cache-dash-h"
 }
 
 # running a simple command unchanged with no -h
 function test2 {
+    setup
     cache-dash-h bash -c "echo hello world" | grep "hello world"
 }
 
 # caching with --help is given
 function test3 {
+    setup
+    cache-dash-h -v bash --help
+
     setup
     cache-dash-h -v bash --help | grep "cache-dash-h: Saved to cache 'local.db'"
     cache-dash-h -v bash --help | grep "cache-dash-h: Read from cache 'local.db'"
@@ -109,6 +115,21 @@ function test10 {
     rm -rf $tmpdir
 }
 
+# test deleting file listed as a dependency
+function test11 {
+    setup
+    tmpdir=$(mktemp -d)
+    touch $tmpdir/foo
+    pushd $tmpdir
+    which python
+    cache-dash-h -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help
+    cache-dash-h -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help | grep "Read from cache"
+    rm -f $tmpdir/foo
+    # now that file doesn't exist, it's the same as having changed the dep
+    cache-dash-h -v python -c $'try:\n open("./foo")\nexcept:\n pass' --help grep "Saved to cache"
+    popd
+    rm -rf $tmpdir
+}
 
 test1
 test2
@@ -120,3 +141,4 @@ test7
 test8
 test9
 test10
+test11

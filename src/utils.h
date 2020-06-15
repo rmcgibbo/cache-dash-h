@@ -45,7 +45,7 @@ bool cmd_has_dash_h(const std::vector<std::string>& cmd);
 
 std::string hash_command_line(int length, const std::vector<std::string>& cmd);
 
-std::string hash_filename(const std::string& fn);
+std::string hash_filename(const std::string& fn, bool allow_ENOENT);
 
 std::string find_in_path(const std::string& filename);
 

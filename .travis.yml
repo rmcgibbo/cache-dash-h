@@ -20,6 +20,6 @@ jobs:
       dist: bionic
 
 script:
-  - mkdir build && cd build && cmake ..
+  - mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug
   - make
   - ctest -V

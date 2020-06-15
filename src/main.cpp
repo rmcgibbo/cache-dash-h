@@ -10,10 +10,12 @@
 #include <memory>
 #include <unistd.h>
 
-using namespace std;
-using namespace cache_dash_h;
 extern int optind;
 extern char* optarg;
+
+using namespace std;
+using namespace cache_dash_h;
+namespace cache_dash_h {
 
 std::vector<std::string> load_stable_paths() {
     char* stablepaths = getenv("CACHEDASHH_STABLEPATH");
@@ -136,6 +138,8 @@ example:
 
     return options;
 }
+} // namespace;
+
 
 int main(int argc, char** argv) {
     std::vector<std::string> cmd;
