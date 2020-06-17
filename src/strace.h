@@ -1,10 +1,8 @@
 #pragma once
-#include <functional>
-#include <linux/limits.h>
-#include <string>
-#include <sys/types.h>
-#include <utility>
-#include <vector>
+#include <functional> // for function
+#include <string>     // for string
+#include <utility>    // for pair
+#include <vector>     // for vector
 
 namespace cache_dash_h {
 

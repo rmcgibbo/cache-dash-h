@@ -1,18 +1,22 @@
 #include "utils.h"
-#include "SpookyV2.h"
-#include "error_prints.h"
-#include "unistd.h"
-#include <cstdio>
-#include <cstring>
-#include <fcntl.h>
-#include <inttypes.h>
-#include <iterator>
-#include <libgen.h>
-#include <linux/limits.h>
-#include <sstream>
-#include <stdexcept>
-#include <sys/mman.h>
-#include <sys/stat.h>
+#include "SpookyV2.h"         // for SpookyHash
+#include "error_prints.h"     // for perror_msg_and_die
+#include "unistd.h"           // for close, getcwd
+#include <algorithm>          // for copy, equal, min
+#include <cstdio>             // for size_t, fprintf, sprintf, stderr
+#include <cstring>            // for strlen, strncpy, strchr
+#include <ctype.h>            // for isspace
+#include <errno.h>            // for errno, EACCES, ENAMETOOLONG, ENOENT
+#include <ext/alloc_traits.h> // for __alloc_traits<>::value_type
+#include <fcntl.h>            // for open, O_RDONLY
+#include <inttypes.h>         // for PRIx64
+#include <iterator>           // for ostream_iterator
+#include <libgen.h>           // for dirname
+#include <sstream>            // for stringstream
+#include <stdint.h>           // for uint64_t
+#include <stdlib.h>           // for getenv, realpath
+#include <sys/mman.h>         // for mmap, munmap, MAP_FAILED, MAP_SHARED
+#include <sys/stat.h>         // for stat, fstat, S_ISREG
 
 namespace cache_dash_h {
 static const std::vector<std::vector<std::string>> HELP_FLAGS{
@@ -160,16 +164,17 @@ std::string hash_filename(const std::string& fn, bool allow_ENOENT) {
         if (close(fd) < 0) {
             perror_msg_and_die("Can't close: '%s'", fn.c_str());
         }
-        // fprintf(stderr, "%s: WARNING: not regular file: %s\n", program_invocation_short_name, fn.c_str());
+        // fprintf(stderr, "%s: WARNING: not regular file: %s\n", program_invocation_short_name,
+        // fn.c_str());
         return hexdigest(spooky);
     }
     auto file_size = statbuf.st_size;
 
-
     if (file_size > 0) {
         auto file_buffer = mmap(0, file_size, PROT_READ, MAP_SHARED, fd, 0);
         if (file_buffer == MAP_FAILED) {
-            fprintf(stderr, "%s: WARNING mmap failed: %s\n", program_invocation_short_name, fn.c_str());
+            fprintf(stderr, "%s: WARNING mmap failed: %s\n", program_invocation_short_name,
+                    fn.c_str());
             if (close(fd) < 0)
                 perror_msg_and_die("Can't close: '%s'", fn.c_str());
             return hexdigest(spooky);

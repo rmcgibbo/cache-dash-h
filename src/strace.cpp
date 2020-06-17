@@ -1,18 +1,23 @@
 #include "strace.h"
-#include "assert.h"
-#include "error_prints.h"
-#include "utils.h"
+#include <bits/types/struct_iovec.h>  // for iovec
+#include <elf.h>                      // for NT_PRSTATUS
+#include <errno.h>                    // for ENOENT, ENOSYS, errno
+#include <fcntl.h>                    // for O_WRONLY, O_DIRECTORY, SEEK_SET
+#include <limits.h>                   // for PATH_MAX
+#include <signal.h>                   // for kill, SIGSTOP
+#include <stdlib.h>                   // for mkstemp, size_t, NULL, WEXITSTATUS
+#include <string.h>                   // for memchr
+#include <sys/ptrace.h>               // for ptrace, PTRACE_GETREGSET, PTRAC...
+#include <sys/uio.h>                  // for process_vm_readv
+#include <sys/user.h>                 // for user_regs_struct
+#include <sys/wait.h>                 // for waitpid
+#include <syscall.h>                  // for SYS_chdir, SYS_open, SYS_openat
+#include <unistd.h>                   // for pid_t, close, dup2, execvp, fork
+#include <utility>                    // for pair, make_pair
+#include "error_prints.h"             // for perror_msg_and_die, error_msg_a...
+#include "utils.h"                    // for isabs, realpath, c_cmdline, getcwd
 
-#include <elf.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/ptrace.h>
-#include <sys/syscall.h>
-#include <sys/uio.h>
-#include <sys/user.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <utility>
+
 
 #if defined(__x86_64__) || defined(_M_X64)
 #define X64 1

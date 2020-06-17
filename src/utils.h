@@ -1,9 +1,10 @@
 #pragma once
-#include <functional>
-#include <limits.h>
-#include <stdint.h>
-#include <string>
-#include <vector>
+#include <functional> // for function
+#include <limits.h>   // for _POSIX_ARG_MAX
+#include <memory>     // for allocator_traits<>::value_type
+#include <stddef.h>   // for NULL, size_t
+#include <string>     // for string
+#include <vector>     // for vector
 
 namespace cache_dash_h {
 
