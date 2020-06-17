@@ -1,19 +1,14 @@
-#include "SQLiteCpp/Exception.h" // for Exception
-#include "database.h"            // for Database
-#include "error_prints.h"        // for perror_msg_and_die, error_msg_and_die
-#include "strace.h"              // for exec_and_record_opened_files
-#include "utils.h"               // for c_cmdline, startswith, dirname, rep...
-#include <cstdio>                // for printf, sscanf, NULL, size_t, EOF
-#include <errno.h>               // for program_invocation_short_name
-#include <ext/alloc_traits.h>    // for __alloc_traits<>::value_type
-#include <getopt.h>              // for getopt_long, optional_argument, no_...
-#include <iostream>              // for std
-#include <memory>                // for unique_ptr, allocator_traits<>::val...
-#include <stdlib.h>              // for exit, getenv, EXIT_SUCCESS
-#include <string>                // for string, basic_string
-#include <unistd.h>              // for execvp
-#include <utility>               // for pair
-#include <vector>                // for vector
+#include "database.h"
+#include "error_prints.h"
+#include "strace.h"
+#include "utils.h"
+#include <cassert>
+#include <cstdio>
+#include <cstring>
+#include <getopt.h>
+#include <iostream>
+#include <memory>
+#include <unistd.h>
 
 extern int optind;
 extern char* optarg;
@@ -143,7 +138,8 @@ example:
 
     return options;
 }
-} // namespace cache_dash_h
+} // namespace;
+
 
 int main(int argc, char** argv) {
     std::vector<std::string> cmd;

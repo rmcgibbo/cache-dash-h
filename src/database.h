@@ -1,4 +1,3 @@
-#pragma once
 #include "utils.h"
 #include <SQLiteCpp/SQLiteCpp.h>
 
