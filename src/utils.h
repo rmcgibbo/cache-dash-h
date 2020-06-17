@@ -1,7 +1,8 @@
 #pragma once
 #include <functional>
 #include <limits.h>
-#include <stdint.h>
+#include <memory>
+#include <stddef.h>
 #include <string>
 #include <vector>
 

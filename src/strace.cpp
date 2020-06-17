@@ -1,5 +1,4 @@
 #include "strace.h"
-#include "assert.h"
 #include "error_prints.h"
 #include "utils.h"
 
