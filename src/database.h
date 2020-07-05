@@ -42,7 +42,8 @@ struct Database {
             hash           TEXT        NOT NULL,
             ctime          INTEGER     NOT NULL,
             atime          INTEGER     NOT NULL,
-            help           TEXT        NOT NULL,
+            stdout         TEXT        NOT NULL,
+            stderr         TEXT        NOT NULL,
             exit_status    INTEGER     NOT NULL
         );
         CREATE TABLE file (
@@ -67,7 +68,8 @@ struct Database {
         }
         SQLite::Statement q(db_, R"EOF(
         SELECT
-            cmdline.help,
+            cmdline.stdout,
+            cmdline.stderr,
             cmdline.exit_status,
             group_concat(file.path, "::::::::::") as path,
             group_concat(file.hash, "::::::::::") as hash,
@@ -118,9 +120,11 @@ struct Database {
                 }
             }
             if ((i > 0) && match) {
-                std::string help = q.getColumn("help");
+                std::string stdout_ = q.getColumn("stdout");
+                std::string stderr_ = q.getColumn("stderr");
                 int exit_status = q.getColumn("exit_status");
-                printf("%s", help.c_str());
+                printf("%s", stdout_.c_str());
+                fprintf(stderr, "%s", stderr_.c_str());
                 if (verbose_) {
                     printf("%s: Read from cache '%s'\n", program_invocation_short_name,
                            db_.getFilename().c_str());
@@ -139,22 +143,23 @@ struct Database {
 
     int Insert(const std::vector<std::string>& cmd,
                const std::string& cmdhash,
-               const std::pair<std::string, int>& output,
+               const std::tuple<std::string, std::string, int>& output,
                const std::vector<std::string>& depfiles) {
         // Begin transaction
         SQLite::Transaction transaction(db_);
 
         SQLite::Statement insert1(db_, R"EOF(
-            INSERT INTO cmdline (id, argv, hash, ctime, atime, help, exit_status)
-            VALUES (NULL, ?, ?, ?, ?, ?, ?);
+            INSERT INTO cmdline (id, argv, hash, ctime, atime, stdout, stderr, exit_status)
+            VALUES (NULL, ?, ?, ?, ?, ?, ?, ?);
         )EOF");
         auto time = std::time(nullptr);
         insert1.bind(1, str::join(cmd, " "));
         insert1.bind(2, cmdhash);
         insert1.bind(3, time);
         insert1.bind(4, time);
-        insert1.bind(5, output.first);
-        insert1.bind(6, output.second);
+        insert1.bind(5, std::get<0>(output));
+        insert1.bind(6, std::get<1>(output));
+        insert1.bind(7, std::get<2>(output));
 
         insert1.exec();
         auto cmdline_id = db_.getLastInsertRowid();

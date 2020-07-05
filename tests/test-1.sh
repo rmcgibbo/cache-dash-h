@@ -10,6 +10,7 @@ function setup {
 # check that help text is generated
 function test1 {
     setup
+    pwd
     $CMD | grep "usage: cache-dash-h"
     $CMD -h  | grep "usage: cache-dash-h"
 }

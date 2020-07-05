@@ -138,8 +138,7 @@ example:
 
     return options;
 }
-} // namespace;
-
+} // namespace cache_dash_h
 
 int main(int argc, char** argv) {
     std::vector<std::string> cmd;
@@ -198,10 +197,11 @@ int main(int argc, char** argv) {
         deps.push_back(path);
     });
 
-    printf("%s", out.first.c_str());
+    fprintf(stdout, "%s", std::get<0>(out).c_str());
+    fprintf(stderr, "%s", std::get<1>(out).c_str());
     db->Insert(options.cmd, cmdhash, out, deps);
     if (options.verbose) {
         printf("%s: Saved to cache '%s'\n", program_invocation_short_name, options.db_path.c_str());
     }
-    exit(out.second);
+    exit(std::get<2>(out));
 }

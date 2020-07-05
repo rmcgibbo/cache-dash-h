@@ -202,27 +202,35 @@ int trace_child(pid_t pid, int* exit_status, std::vector<syscall_record>& record
 /* Fork and exec a child process, and return the stdout of the child process
    as well as the list of all of the files it opened.
 */
-std::pair<std::string, int>
+std::tuple<std::string, std::string, int>
 exec_and_record_opened_files(std::vector<std::string>& cmd,
                              std::function<void(std::string const&)> open_callback) {
     int exit_status = -1;
     pid_t pid = 0;
     std::string curdir = path::getcwd();
 
-    char helptext_fn[] = "/tmp/cache-dash-h-XXXXXX";
-    int helptext_fd = mkstemp(helptext_fn);
-    if (unlink(helptext_fn) < 0)
+    char stdout_fn[] = "/tmp/cache-dash-h-stdout-XXXXXX";
+    char stderr_fn[] = "/tmp/cache-dash-h-stderr-XXXXXX";
+    int stdout_fd = mkstemp(stdout_fn);
+    int stderr_fd = mkstemp(stderr_fn);
+    if (unlink(stdout_fn) < 0)
+        perror_msg_and_die("Can't unlink");
+    if (unlink(stderr_fn) < 0)
         perror_msg_and_die("Can't unlink");
 
-    if (helptext_fd == -1)
+    if (stdout_fd == -1)
+        perror_msg_and_die("Can't open tempfile");
+    if (stderr_fd == -1)
         perror_msg_and_die("Can't open tempfile");
 
     if ((pid = fork()) == -1)
         perror_msg_and_die("Can't fork");
 
     if (pid == 0) {
-        dup2(helptext_fd, STDOUT_FILENO);
-        close(helptext_fd);
+        dup2(stdout_fd, STDOUT_FILENO);
+        dup2(stderr_fd, STDERR_FILENO);
+        close(stdout_fd);
+        close(stderr_fd);
 
         c_cmdline c_style(cmd);
         ptrace(PTRACE_TRACEME);
@@ -254,12 +262,16 @@ exec_and_record_opened_files(std::vector<std::string>& cmd,
     }
 
     char buffer[4096];
-    std::string helptext;
-    lseek(helptext_fd, 0, SEEK_SET);
-    while (int nread = read(helptext_fd, buffer, sizeof(buffer))) {
-        helptext.append(buffer, nread);
+    std::string stdout_, stderr_;
+    lseek(stdout_fd, 0, SEEK_SET);
+    while (int nread = read(stdout_fd, buffer, sizeof(buffer))) {
+        stdout_.append(buffer, nread);
     }
-    return std::make_pair(helptext, exit_status);
+    lseek(stderr_fd, 0, SEEK_SET);
+    while (int nread = read(stderr_fd, buffer, sizeof(buffer))) {
+        stderr_.append(buffer, nread);
+    }
+    return std::make_tuple(stdout_, stderr_, exit_status);
 }
 
 }; // namespace cache_dash_h
